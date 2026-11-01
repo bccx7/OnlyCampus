@@ -7,7 +7,7 @@ import {safeReturnPath} from '../frontend/src/authNavigation.js';
 
 test('login return accepts only known local destinations',()=>{
   assert.equal(safeReturnPath('/articles/2?commentId=4#comment-4'),'/articles/2?commentId=4#comment-4');
-  for(const v of ['https://example.com','//example.com','/\\example.com','/login','/admin',undefined])assert.equal(safeReturnPath(v),'/');
+  for(const v of ['https://example.com','//example.com','/\\example.com','/login','/register','/admin',undefined])assert.equal(safeReturnPath(v),'/');
 });
 
 test('user login rotates session, validates credentials and logout revokes access',async()=>{

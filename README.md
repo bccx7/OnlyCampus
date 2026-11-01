@@ -1,8 +1,12 @@
 # OnlyCampus 阅读发现与互动模块
 
+普通用户注册已接入 `/register` 与 `POST /api/auth/register`：账号4—24位字母数字下划线，昵称2—30字，密码8—64位并确认；账号唯一、密码加密，角色固定USER且状态固定ACTIVE，成功后自动登录。注册限流为进程内每IP每15分钟最多10次有效格式的尝试。页面使用骨架屏和约180ms中栏过渡，不显示加载文字；减少动画偏好下关闭过渡与骨架动画。
+
 评论与个人主页更新：个人主页提供帖子、回复、专栏三个标签；“回复”查询本人在公开帖子下的可见评论及楼内回复。内容页已移除目录入口，仅呈现标题和完整正文。楼内回复以白底缩进显示，多于1条默认折叠；可回复任意可见回复，开头显示实际被回复人的昵称。新增 `comments.reply_to_id` 保存直接回复对象，`parent_id` 继续保存顶层评论，避免无限嵌套。已有开发数据库需执行 `npm run db:init`，脚本会检查并补列，也会补充演示数据，请勿对正式数据库直接运行。
 
 项目仓库：[github.com/bccx7/OnlyCampus](https://github.com/bccx7/OnlyCampus)；完整方案见 [开发文档](docs/OnlyCampus_详细开发文档.md)。
+
+上线与协作更新必读：[部署与更新指南](docs/OnlyCampus_部署与更新指南.md)。包含 Azure 手动发布、数据库迁移与备份、环境变量、HTTPS、验收及回滚注意事项。
 
 前端协作必读：[界面与交互开发指南](docs/OnlyCampus_界面与交互开发指南.md)。固定三栏、搜索、返回、个人页、评论折叠及视觉标准以此为准，新模块接入前应先核对其中的验收清单。
 
@@ -33,7 +37,7 @@ Start-Process -FilePath "$base/mysql-8.4.13-winx64/bin/mysqld.exe" -ArgumentList
 
 仅当 MySQL 没有运行时执行；等待启动后运行 `npm run dev`。本机生成的数据库密码保存在被 Git 忽略的 `.env` 中，不能提交或分享。其他成员应配置自己的数据库和凭据。`npm test` 要求开发服务器和种子数据已运行，会创建一条软删除的测试评论及相关通知。
 
-开发数据库演示账号 `author`、`reader` 的密码均为 `campus123`，由种子脚本生成，不能作为公网正式凭据。页面使用 `POST /api/auth/login`、`POST /api/auth/logout` 和 `GET /api/auth/me`；仅允许ACTIVE状态的USER账号登录，管理员入口、注册、找回密码及账号管理不在此次实现范围。原 `/api/dev/login`、`/api/dev/logout` 已移除。登录前获取CSRF令牌，成功后使用返回的新令牌；会话保存在MySQL并通过HttpOnly Cookie关联，退出后服务端撤销会话。当前登录限流按进程内IP统计，每15分钟最多20次尝试，包含成功和失败；重启会清空，多实例部署需改共享存储限流。生产环境启用Secure Cookie，现按一层可信反向代理配置；部署环境必须与此匹配。公网发布仍需完成前端静态资源托管、正式账号准备和环境配置。
+开发数据库演示账号 `author`、`reader` 的密码均为 `campus123`，由种子脚本生成，不能作为公网正式凭据。页面使用 `POST /api/auth/login`、`POST /api/auth/logout` 和 `GET /api/auth/me`；仅允许ACTIVE状态的USER账号登录，管理员入口、找回密码及账号管理不在此次实现范围。原 `/api/dev/login`、`/api/dev/logout` 已移除。登录前获取CSRF令牌，成功后使用返回的新令牌；会话保存在MySQL并通过HttpOnly Cookie关联，退出后服务端撤销会话。当前登录限流按进程内IP统计，每15分钟最多20次尝试，包含成功和失败；重启会清空，多实例部署需改共享存储限流。生产环境启用Secure Cookie，现按一层可信反向代理配置；部署环境必须与此匹配。公网发布仍需完成前端静态资源托管、正式账号准备和环境配置。
 
 ## 数据和接口交接
 

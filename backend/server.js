@@ -28,6 +28,28 @@ const loginAttempts=new Map();
 const dummyPasswordHash=bcrypt.hashSync('onlycampus-invalid-account',12);
 const loginWindow=15*60*1000;
 const cleanupAttempts=setInterval(()=>{for(const [key,value] of loginAttempts)if(value.until<Date.now())loginAttempts.delete(key)},60000);cleanupAttempts.unref();
+const registrationAttempts=new Map();
+const cleanupRegistrations=setInterval(()=>{for(const [key,value] of registrationAttempts)if(value.until<Date.now())registrationAttempts.delete(key)},60000);cleanupRegistrations.unref();
+async function establishUserSession(req,res,u){
+  await new Promise((resolve,reject)=>req.session.regenerate(err=>err?reject(err):resolve()));
+  req.session.userId=String(u.id);req.session.csrf=crypto.randomBytes(32).toString('hex');
+  await new Promise((resolve,reject)=>req.session.save(err=>err?reject(err):resolve()));
+  ok(res,{user:{id:String(u.id),nickname:u.nickname,role:'USER'},csrfToken:req.session.csrf});
+}
+app.post('/api/auth/register',wrap(async(req,res)=>{
+  const username=typeof req.body.username==='string'?req.body.username.trim():'';
+  const nickname=typeof req.body.nickname==='string'?req.body.nickname.trim():'';
+  const password=typeof req.body.password==='string'?req.body.password:'';
+  if(!/^[a-zA-Z0-9_]{4,24}$/.test(username))throw fail(422,'账号需为4—24位字母、数字或下划线');
+  if(nickname.length<2 || nickname.length>30)throw fail(422,'昵称需为2—30字');
+  if(password.length<8 || password.length>64)throw fail(422,'密码需为8—64位');
+  if(password!==req.body.passwordConfirmation)throw fail(422,'两次输入的密码不一致');
+  let attempts=registrationAttempts.get(req.ip);if(!attempts || attempts.until<Date.now()){attempts={count:0,until:Date.now()+loginWindow};registrationAttempts.set(req.ip,attempts)}
+  if(attempts.count>=10){res.set('Retry-After',String(Math.ceil((attempts.until-Date.now())/1000)));throw fail(429,'注册尝试过于频繁，请稍后再试')}attempts.count++;
+  const hash=await bcrypt.hash(password,12);let result;
+  try{[result]=await db.execute('INSERT INTO users(username,nickname,password_hash,role,status) VALUES (?,?,?,"USER","ACTIVE")',[username,nickname,hash])}catch(e){if(e.code==='ER_DUP_ENTRY')throw fail(409,'该账号已被使用，请换一个');throw e}
+  await establishUserSession(req,res,{id:result.insertId,nickname});
+}));
 app.post('/api/auth/login',wrap(async(req,res)=>{
   const username=typeof req.body.username==='string'?req.body.username.trim():'';
   const password=typeof req.body.password==='string'?req.body.password:'';
@@ -39,10 +61,7 @@ app.post('/api/auth/login',wrap(async(req,res)=>{
   const [[u]]=await db.execute('SELECT id,password_hash,status,role,nickname FROM users WHERE username=?',[username]);
   const valid=await bcrypt.compare(password,u?.password_hash||dummyPasswordHash);
   if(!valid || !u || u.status!=='ACTIVE' || u.role!=='USER')throw fail(401,'账号或密码错误，或账号不可用');
-  await new Promise((resolve,reject)=>req.session.regenerate(err=>err?reject(err):resolve()));
-  req.session.userId=String(u.id);req.session.csrf=crypto.randomBytes(32).toString('hex');
-  await new Promise((resolve,reject)=>req.session.save(err=>err?reject(err):resolve()));
-  ok(res,{user:{id:String(u.id),nickname:u.nickname,role:u.role},csrfToken:req.session.csrf});
+  await establishUserSession(req,res,u);
 }));
 app.post('/api/auth/logout',wrap(async(req,res)=>{
   await new Promise((resolve,reject)=>req.session.destroy(err=>err?reject(err):resolve()));
