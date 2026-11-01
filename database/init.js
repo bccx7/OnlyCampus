@@ -8,6 +8,9 @@ const c = await mysql.createConnection({host:process.env.DB_HOST||'127.0.0.1', p
 await c.query(`CREATE DATABASE IF NOT EXISTS \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
 await c.query(`USE \`${name}\``);
 await c.query(await readFile(new URL('./schema.sql',import.meta.url),'utf8'));
+const [replyColumn]=await c.query("SHOW COLUMNS FROM comments LIKE 'reply_to_id'");
+if(!replyColumn.length)await c.query('ALTER TABLE comments ADD COLUMN reply_to_id BIGINT NULL AFTER parent_id');
+await c.query('UPDATE comments SET reply_to_id=parent_id WHERE parent_id IS NOT NULL AND reply_to_id IS NULL');
 const password = await bcrypt.hash('campus123', 12);
 await c.query('INSERT IGNORE INTO users(id,username,password_hash,nickname,bio) VALUES (1,?,?,?,?),(2,?,?,?,?)',['author',password,'林同学','记录在校园里慢慢生长的日子。','reader',password,'小周','喜欢读故事，也喜欢分享。']);
 await c.query("INSERT IGNORE INTO categories(id,name) VALUES (1,'课程学习'),(2,'项目实践'),(3,'校园生活'),(4,'旅行见闻')");

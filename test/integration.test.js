@@ -10,7 +10,7 @@ test('public reading and authenticated interaction against a running development
   const filtered=await call('/articles?q=网页&categoryId=2&tagId=1');assert.equal(Number(filtered.body.data.total),1);
   assert.equal((await call('/articles/1/favorite','PUT')).status,403);
   csrf=(await call('/auth/csrf')).body.data.token;
-  assert.equal((await call('/dev/login','POST',{username:'reader',password:'campus123'})).status,200);
+  assert.equal((await call('/auth/login','POST',{username:'reader',password:'campus123'})).status,200);
   csrf=(await call('/auth/csrf')).body.data.token;
   assert.equal((await call('/articles/1/favorite','PUT')).status,200);
   assert.equal((await call('/articles/1/favorite','PUT')).status,200);
@@ -19,6 +19,7 @@ test('public reading and authenticated interaction against a running development
   const c=await call('/articles/1/comments','POST',{content:'测试评论'});assert.equal(c.status,200);
   assert.equal((await call('/articles/2/comments','POST',{content:'跨文章回复',parentId:c.body.data.id})).status,422);
   assert.equal((await call('/comments/'+c.body.data.id,'DELETE')).status,200);
+  const afterDelete=await call('/articles/1/comments');assert.ok(!afterDelete.body.data.items.some(item=>item.id===c.body.data.id));
   assert.equal((await call('/articles/1/favorite','DELETE')).status,200);
   assert.equal((await call('/articles/1/favorite','DELETE')).status,200);
 });
