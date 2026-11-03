@@ -47,6 +47,8 @@ function search(e){const fd=new FormData(e.target);router.push({path:'/articles'
     <aside class="social-sidebar" aria-label="主导航">
       <RouterLink to="/" class="social-brand"><span class="brand-mark">o<span>.</span></span><strong>OnlyCampus</strong></RouterLink>
       <nav class="social-nav">
+        <RouterLink v-if="user" to="/me/notifications" aria-label="站内通知"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5zM10 21h4"/></svg><span>通知</span></RouterLink>
+        <RouterLink v-if="user?.role==='ADMIN'" to="/admin" aria-label="管理后台"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><span>管理后台</span></RouterLink>
         <RouterLink to="/" :class="{'nav-current':kind==='home'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>首页</span></RouterLink>
         <RouterLink to="/articles" :class="{'nav-current':exploring}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>探索</span></RouterLink>
         <RouterLink :to="user?'/me/favorites':'/login?next=/me/favorites'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3.5h12v17L12 17l-6 3.5z" stroke-linejoin="round"/></svg><span>收藏</span></RouterLink>
