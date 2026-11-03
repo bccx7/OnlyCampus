@@ -25,13 +25,15 @@ export function installOperations(app, db, {ok, fail, wrap}) {
     (SELECT COUNT(*) FROM articles WHERE status='PENDING' AND deleted_at IS NULL) pending,
     (SELECT COUNT(*) FROM comments WHERE status='VISIBLE') comments`);ok(res,r);}));
   app.get('/api/admin/statistics/publications',admin,wrap(async(req,res)=>{
+    const days=Number(req.query.days||7);
+    if(!Number.isInteger(days)||days<1||days>365)throw fail(400,'日期范围错误');
     // Connections use UTC; numeric offsets avoid depending on installed time-zone tables.
     const [rows]=await db.query(`WITH RECURSIVE days AS (
-      SELECT DATE(CONVERT_TZ(NOW(),'+00:00','+08:00')) - INTERVAL 6 DAY day
+      SELECT DATE(CONVERT_TZ(NOW(),'+00:00','+08:00')) - INTERVAL ? DAY day
       UNION ALL SELECT day + INTERVAL 1 DAY FROM days WHERE day < DATE(CONVERT_TZ(NOW(),'+00:00','+08:00'))
     ) SELECT DATE_FORMAT(d.day,'%Y-%m-%d') day,COUNT(e.article_id) count FROM days d
       LEFT JOIN publication_events e ON DATE(CONVERT_TZ(e.first_published_at,'+00:00','+08:00'))=d.day
-      GROUP BY d.day ORDER BY d.day`);ok(res,rows);
+      GROUP BY d.day ORDER BY d.day`,[days-1]);ok(res,rows);
   }));
   app.get('/api/admin/articles',admin,wrap(async(req,res)=>{let where='a.deleted_at IS NULL',args=[];
     if(req.query.status){if(!['DRAFT','PENDING','PUBLISHED','REJECTED','OFFLINE'].includes(req.query.status))throw fail(400,'文章状态错误');where+=' AND a.status=?';args.push(req.query.status);}
@@ -69,7 +71,7 @@ export function installOperations(app, db, {ok, fail, wrap}) {
       await c.execute('UPDATE articles SET is_featured=? WHERE id=?',[req.body.featured,req.params.id]);await log(c,req.user.id,req.body.featured?'FEATURE':'UNFEATURE',req.params.id);
     });ok(res,null);
   }));
-  app.get('/api/admin/users',admin,wrap(async(req,res)=>list(req,res,'SELECT CAST(id AS CHAR) id,username,nickname,role,status,created_at createdAt FROM users ORDER BY id DESC','SELECT COUNT(*) total FROM users')));
+  app.get('/api/admin/users',admin,wrap(async(req,res)=>{const q=typeof req.query.q==='string'?req.query.q.trim().slice(0,100):'';const where=q?"WHERE username LIKE ? ESCAPE '!' OR nickname LIKE ? ESCAPE '!'":'';const term='%'+q.replace(/[!%_]/g,'!$&')+'%';await list(req,res,`SELECT CAST(id AS CHAR) id,username,nickname,role,status,created_at createdAt FROM users ${where} ORDER BY id DESC`,`SELECT COUNT(*) total FROM users ${where}`,q?[term,term]:[]);}));
   app.patch('/api/admin/users/:id/status',admin,wrap(async(req,res)=>{
     if(!['ACTIVE','DISABLED'].includes(req.body.status))throw fail(422,'账号状态错误');
     const reason=text(req.body.reason,2,300,'操作原因');

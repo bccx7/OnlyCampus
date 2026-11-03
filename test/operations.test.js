@@ -47,6 +47,8 @@ test('operations permissions, transactional review, notifications, moderation an
     await call(admin,'/admin/comments/'+comment.id+'/status','PATCH',{status:'VISIBLE',reason:'尝试恢复'},422);
     await call(owner,'/me/notifications/read-all','POST');assert.equal((await call(owner,'/me/notifications/unread-count')).count,0);
     const trend=await call(admin,'/admin/statistics/publications');assert.equal(trend.length,7);assert.ok(trend.every(d=>/^\d{4}-\d{2}-\d{2}$/.test(d.day)));assert.ok(trend.some(d=>Number(d.count)===0));
+    const month=await call(admin,'/admin/statistics/publications?days=30');assert.equal(month.length,30);await call(admin,'/admin/statistics/publications?days=366','GET',null,400);
+    const searched=await call(admin,'/admin/users?q='+encodeURIComponent('opsowner'+suffix));assert.equal(searched.total,1);assert.equal(searched.items[0].id,String(users[1]));const literal=await call(admin,'/admin/users?q=%25');assert.ok(literal.items.every(u=>u.username.includes('%')||u.nickname.includes('%')));
     await call(admin,'/admin/users/'+users[0]+'/status','PATCH',{status:'DISABLED',reason:'测试保护管理员'},403);
     await call(admin,'/admin/users/'+users[1]+'/status','PATCH',{status:'DISABLED',reason:'测试账号禁用'});
     await call(owner,'/auth/me','GET',null,401);
