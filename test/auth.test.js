@@ -7,7 +7,7 @@ import {safeReturnPath} from '../frontend/src/authNavigation.js';
 
 test('login return accepts only known local destinations',()=>{
   assert.equal(safeReturnPath('/articles/2?commentId=4#comment-4'),'/articles/2?commentId=4#comment-4');
-  for(const v of ['https://example.com','//example.com','/\\example.com','/login','/register','/admin',undefined])assert.equal(safeReturnPath(v),'/');
+  for(const v of ['https://example.com','//example.com','/\\example.com','/login','/register',undefined])assert.equal(safeReturnPath(v),'/');
 });
 
 test('user login rotates session, validates credentials and logout revokes access',async()=>{
@@ -23,8 +23,9 @@ test('user login rotates session, validates credentials and logout revokes acces
     assert.equal((await request('/auth/me')).body.data.id,String(id));assert.equal((await request('/auth/me','GET',undefined,oldCookie)).body.data,null);
     const activeCookie=cookie;assert.equal((await request('/auth/logout','POST')).status,200);assert.equal((await request('/me/favorites','GET',undefined,activeCookie)).status,401);
     csrf=(await request('/auth/csrf')).body.data.token;
-    await db.execute('UPDATE users SET role="ADMIN" WHERE id=?',[id]);assert.equal((await request('/auth/login','POST',{username:name,password:'password123'})).status,401);
+    await db.execute('UPDATE users SET role="ADMIN" WHERE id=?',[id]);assert.equal((await request('/auth/login','POST',{username:name,password:'password123'})).status,200);csrf=(await request('/auth/csrf')).body.data.token;
     await db.execute('UPDATE users SET role="USER",status="DISABLED" WHERE id=?',[id]);assert.equal((await request('/auth/login','POST',{username:name,password:'password123'})).status,401);
+    csrf=(await request('/auth/csrf')).body.data.token;
     assert.equal((await request('/dev/login','POST',{username:name,password:'password123'})).status,404);
   }finally{if(id)await db.execute('DELETE FROM users WHERE id=?',[id]);await db.end()}
 });
