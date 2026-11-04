@@ -4,7 +4,7 @@ const emit=defineEmits(['favorite']);
 </script>
 <template>
   <article class="post">
-    <RouterLink :to="'/users/'+post.authorId" class="avatar" :aria-label="post.author+'的主页'">{{post.author?.slice(0,1)}}</RouterLink>
+    <RouterLink :to="'/users/'+post.authorId" class="avatar" :aria-label="post.author+'的主页'"><img v-if="post.authorAvatarPath" :src="post.authorAvatarPath" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><template v-else>{{post.author?.slice(0,1)}}</template></RouterLink>
     <div class="post-content">
       <div class="post-byline"><RouterLink :to="'/users/'+post.authorId" class="post-author">{{post.author}}</RouterLink><time v-if="post.publishedAt" class="post-date" :datetime="post.publishedAt">· {{new Date(post.publishedAt).toLocaleDateString('zh-CN',{month:'long',day:'numeric'})}}</time></div>
       <RouterLink :to="'/articles/'+post.id" class="post-story"><h2>{{post.title}}</h2><p>{{post.summary}}</p><img v-if="post.coverPath" :src="post.coverPath" alt="" loading="lazy"></RouterLink>

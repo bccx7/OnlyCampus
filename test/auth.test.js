@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import {safeReturnPath} from '../frontend/src/authNavigation.js';
 
 test('login return accepts only known local destinations',()=>{
+  for(const path of ['/studio','/studio/articles/new','/studio/articles/12/edit','/studio/series','/studio/series/5','/series/5?view=timeline','/me/profile'])assert.equal(safeReturnPath(path),path);
   assert.equal(safeReturnPath('/articles/2?commentId=4#comment-4'),'/articles/2?commentId=4#comment-4');
   for(const v of ['https://example.com','//example.com','/\\example.com','/login','/register',undefined])assert.equal(safeReturnPath(v),'/');
 });
