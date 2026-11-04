@@ -1,0 +1,19 @@
+✔ login return accepts only known local destinations (0.7019ms)
+✔ user login rotates session, validates credentials and logout revokes access (390.4414ms)
+✔ author lifecycle, review races, ownership, series visibility and profile persistence (553.583ms)
+✔ public reading and authenticated interaction against a running development server (299.7272ms)
+✔ duplicate and formatted headings produce unique anchors and valid inline markup (14.3064ms)
+✔ raw scripts, image handlers and unsafe Markdown links cannot execute (1.9537ms)
+✔ short text and headings absent remain readable (0.2117ms)
+✔ reading return preserves feed, search or profile origin through article navigation (0.4352ms)
+✔ operations permissions, transactional review, notifications, moderation and revocation (540.314ms)
+✔ pagination, series visibility and authorization regression (602.7869ms)
+✔ registration validates fields, enforces USER role, hashes password and logs in (938.6998ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4988.2124

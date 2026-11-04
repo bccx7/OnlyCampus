@@ -3,7 +3,7 @@ export function safeReturnPath(value){
   try{
     const url=new URL(value,'https://onlycampus.local');
     if(url.origin!=='https://onlycampus.local' || ['/login','/register'].includes(url.pathname))return '/';
-    if(!/^\/(?:$|articles(?:\/\d+)?\/?$|admin(?:\/(?:articles|users|comments|taxonomy))?\/?$|users\/\d+\/?$|me\/(?:favorites|notifications)\/?$)/.test(url.pathname))return '/';
+    if(!/^\/(?:$|articles(?:\/\d+)?\/?$|admin(?:\/(?:articles|users|comments|taxonomy))?\/?$|users\/\d+\/?$|studio(?:\/articles\/(?:new|\d+\/edit)|\/series(?:\/\d+)?)?\/?$|series\/\d+\/?$|me\/(?:favorites|notifications|profile)\/?$)/.test(url.pathname))return '/';
     return url.pathname+url.search+url.hash;
   }catch{return '/'}
 }

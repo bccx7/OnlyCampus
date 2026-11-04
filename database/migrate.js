@@ -10,6 +10,11 @@ export async function migrate(db) {
   await add('comments','reply_to_id','BIGINT NULL');
   await add('users','created_at','DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
   await add('users','session_version','INT NOT NULL DEFAULT 0');
+  await add('users','avatar_path','VARCHAR(500) NULL');
+  await add('series','cover_path','VARCHAR(500) NULL');
+  await add('articles','created_at','DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await add('articles','submitted_at','DATETIME NULL');
+  await db.query('ALTER TABLE articles MODIFY body_markdown MEDIUMTEXT NOT NULL');
   await add('articles','version','INT NOT NULL DEFAULT 1');
   await add('categories','sort_order','INT NOT NULL DEFAULT 0');
   await add('tags','sort_order','INT NOT NULL DEFAULT 0');
